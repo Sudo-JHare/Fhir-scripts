@@ -1,0 +1,73 @@
+#Fetch the FHIR IG package from the HL7 FHIR Package Registry.
+#Download the package.tgz file.
+#Extract and process all the FHIR resources.
+#🔹 How to Use
+#Set $igPackageName to the desired IG package (e.g., hl7.fhir.us.core).
+#The script will automatically fetch the latest version unless you specify one.
+
+# Define the FHIR IG package name (e.g., hl7.fhir.us.core)
+$igPackageName = "hl7.fhir.au.core"
+$igVersion = "1.1.0-preview"  # Set a specific version if needed, or use "latest"
+
+# Define FHIR Package Registry API URL
+$registryUrl = "https://packages.simplifier.net/$igPackageName"
+
+# Determine the package version
+if ($igVersion -eq "latest") {
+    Write-Host "Fetching latest version for $igPackageName..."
+    $packageInfo = Invoke-RestMethod -Uri "$registryUrl"
+    if (-not $packageInfo.versions) {
+        Write-Error "No versions found for package: $igPackageName"
+        exit
+    }
+    $igVersion = $packageInfo.versions[-1]  # Get latest version
+}
+
+# Construct the download URL
+$packageUrl = "$registryUrl/$igVersion"
+$downloadPath = "$env:TEMP\package.tgz"
+
+Write-Host "Downloading IG package: $packageUrl..."
+Invoke-WebRequest -Uri $packageUrl -OutFile $downloadPath
+
+# Check if the file exists
+if (-Not (Test-Path $downloadPath)) {
+    Write-Error "Failed to download FHIR IG package."
+    exit
+}
+
+# Extract package.tgz
+$tempDir = New-Item -Path "$env:TEMP\FHIR_IG_Extract" -ItemType Directory -Force
+Write-Host "Extracting package..."
+tar -xf $downloadPath -C $tempDir
+
+# Define extracted 'package' directory
+$packageDir = Join-Path $tempDir "package"
+if (-Not (Test-Path $packageDir)) {
+    Write-Error "Extraction failed."
+    exit
+}
+
+# Read all FHIR resource files
+$resourceFiles = Get-ChildItem -Path $packageDir -Filter "*.json"
+
+# Parse resources
+$fhirResources = @()
+foreach ($file in $resourceFiles) {
+    $content = Get-Content -Path $file.FullName -Raw | ConvertFrom-Json
+    $fhirResources += $content
+}
+
+# Output summary
+Write-Host "Total resources found: $($fhirResources.Count)"
+$fhirResources | ForEach-Object {
+    Write-Host "Resource Type: $($_.resourceType), ID: $($_.id)"
+}
+
+# Save to file
+$outputFile = "$env:TEMP\FHIR_Resources.json"
+$fhirResources | ConvertTo-Json -Depth 10 | Set-Content -Path $outputFile
+Write-Host "FHIR resources saved to: $outputFile"
+
+# Cleanup (optional)
+# Remove-Item -Path $tempDir -Recurse -Force

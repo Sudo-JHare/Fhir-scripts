@@ -1,0 +1,35 @@
+#this script uses https://github.com/hl7au/au-fhir-test-data-utils/ Test data client to upload Json formatted Resource data into a Fhir Server.
+
+
+#Substitite items for your list of resources you want to Push into your server
+#https://github.com/Sudo-JHare/Fhir-scripts/blob/main/Powershell/Extract_Resources_From_IG.ps can be used to generate a list of resources from an IG 
+
+$items = @("Patient",
+            "HealthcareService",
+            "Organization",
+            "Location",
+            "Practitioner",
+            "PractitionerRole",
+            "RelatedPerson",
+            "Encounter",
+            "AllergyIntolerance",
+            "Condition",
+            "Immunization",
+            "Procedure",
+            "Observation",
+            "Medication",
+            "MedicationRequest",
+            "MedicationStatement",
+            "Coverage",
+            "Specimen",
+            "CommunicationRequest",
+            "Consent",
+            "ServiceRequest",
+            "Task")
+
+foreach ($item in $items) {
+    ##examples:
+        #C:\dump\TestDataClient.exe $item c:\GIT\C25-Test-Data\au-fhir-test-data-set http://10.39.88.79:8080/fhir basic default
+        #C:\dump\TestDataClient.exe $item C:\dump\input http://10.39.88.79:8080/fhir basic default
+    C:\dump\TestDataClient.exe $item C:\dump\input https://aucore.aidbox.beda.software/fhir basic default
+}

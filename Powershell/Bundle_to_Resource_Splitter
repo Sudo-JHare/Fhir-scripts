@@ -1,0 +1,57 @@
+# will export individual resources from bundles and output them to individual json bundles.
+#useful for Loading back into an empty server.
+
+#Substitite items for your list of resources you want to extract from bundles
+#https://github.com/Sudo-JHare/Fhir-scripts/blob/main/Powershell/Extract_Resources_From_IG.ps can be used to generate a list of resources from an IG 
+
+$items = @("Patient",
+            "HealthcareService",
+            "Organization",
+            "Location",
+            "Practitioner",
+            "PractitionerRole",
+            "RelatedPerson",
+            "Encounter",
+            "AllergyIntolerance",
+            "Condition",
+            "Immunization",
+            "Procedure",
+            "Observation",
+            "Medication",
+            "MedicationRequest",
+            "MedicationStatement",
+            "Coverage",
+            "Specimen",
+            "CommunicationRequest",
+            "Consent",
+            "ServiceRequest",
+            "Task")
+
+foreach ($item in $items) {
+# Define output file path
+$inputFile = "C:\dump\output\output_$item.json"
+
+# Define the JSON file path
+$outputDirectory = "C:\dump\input"
+
+# Read JSON file
+$jsonContent = Get-Content -Path $inputFile -Raw | ConvertFrom-Json
+
+# Ensure output directory exists
+if (!(Test-Path -Path $outputDirectory)) {
+    New-Item -ItemType Directory -Path $outputDirectory | Out-Null
+}
+
+# Loop through each resource in the bundle and save individually
+$index = 1
+foreach ($resource in $jsonContent.entry) {
+    $resourceJson = $resource.resource | ConvertTo-Json -Depth 10
+    $resourceType = $resource.resource.resourceType
+    $outputFile = "$outputDirectory\$resourceType`-$index.json"
+    $resourceJson | Out-File -FilePath $outputFile -Encoding utf8
+    Write-Host "Saved: $outputFile"
+    $index++
+}
+
+Write-Host "All JSON resources have been extracted and saved."
+}

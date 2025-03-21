@@ -1,0 +1,49 @@
+#Substitite items for your list of resources you want to pull bundles from the server.
+#https://github.com/Sudo-JHare/Fhir-scripts/blob/main/Powershell/Extract_Resources_From_IG.ps can be used to generate a list of resources from an IG 
+
+$items = @("Patient",
+            "HealthcareService",
+            "Organization",
+            "Location",
+            "Practitioner",
+            "PractitionerRole",
+            "RelatedPerson",
+            "Encounter",
+            "AllergyIntolerance",
+            "Condition",
+            "Immunization",
+            "Procedure",
+            "Observation",
+            "Medication",
+            "MedicationRequest",
+            "MedicationStatement",
+            "Coverage",
+            "Specimen",
+            "CommunicationRequest",
+            "Consent",
+            "ServiceRequest",
+            "Task")
+
+foreach ($item in $items) {
+    # Make the web request to get the JSON response
+#$jsonResponse = Invoke-RestMethod -Uri http://10.39.88.79:8080/fhir/$item -Method Get
+#https://aucore.aidbox.beda.software/fhir
+$jsonResponse = Invoke-RestMethod -Uri https://aucore.aidbox.beda.software/fhir/$item -Method Get
+
+# Convert JSON response to formatted string
+$jsonFormatted = $jsonResponse | ConvertTo-Json -Depth 10
+
+# Define output file path
+$outputFile = "C:\dump\output\output_$item.json"
+
+# Write JSON output to file
+$jsonFormatted | Out-File -FilePath $outputFile -Encoding utf8
+
+Write-Host "JSON data has been written to $outputFile"
+
+}
+
+
+
+
+
